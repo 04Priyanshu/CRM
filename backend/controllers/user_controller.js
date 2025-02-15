@@ -59,8 +59,11 @@ export const login = async (req, res) => {
     if (user && (await bcrypt.compare(password, user.password))) {
       const tokenData = {
         user_id: user._id,
-        email: user.email,
+        email: user.email, 
+        role: user.role,
+        company: user.company,
       };
+      // console.log(tokenData);
 
       const token = jwt.sign(tokenData, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRE,
@@ -80,6 +83,24 @@ export const login = async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json({ message: "Error in logging in", success: false });
+      .json({ message: "Error in logging in"|| error.message, success: false });
   }
+};
+
+export const logout = async (req, res) => {
+  res.cookie("token", null, {
+    httpOnly: true,
+    sameSite: "strict",
+    maxAge: 0,
+  });
+  return res
+    .status(200)
+    .json({ message: "User logged out successfully", success: true });
+};
+
+export const getUserDetails = async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Unauthorized: No user data" });
+  }
+  res.status(200).json({ user: req.user });
 };
